@@ -10,10 +10,7 @@
     "noEmit": false,
     "outDir": "./dist",
     "rootDir": "./src",
-    "types": ["node"],
-    "paths": {
-      "baileys-caller": ["./src/vendor/baileys-caller/dist/index.d.mts"]
-    }
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "src/vendor", "test", "vitest.config.ts"]

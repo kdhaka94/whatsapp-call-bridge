@@ -20,7 +20,7 @@ import { EventEmitter } from "node:events";
 import { WhatsAppClient } from "./whatsapp/voip-client.js";
 import { ElevenLabsBridge } from "./elevenlabs/bridge.js";
 import type { AgentCallerConfig, CallSessionOptions, CallSessionEvents } from "./config.js";
-import type { ActiveCall } from "baileys-caller";
+import type { ActiveCall } from "./vendor/baileys-caller/dist/index.mjs";
 
 /**
  * Minimal interface for the WhatsApp client used by AgentCaller.

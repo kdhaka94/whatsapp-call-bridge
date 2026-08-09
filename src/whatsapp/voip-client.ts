@@ -9,7 +9,7 @@
  * false, the default feeder is used and `audioSource` (file path / "silence")
  * behaves as in upstream baileys-caller.
  */
-import { VoipClient, type ActiveCall as VendorActiveCall } from "baileys-caller";
+import { VoipClient, type ActiveCall as VendorActiveCall } from "../vendor/baileys-caller/dist/index.mjs";
 import { PushAudioFeeder, type PushAudioFeederOptions } from "./push-audio-feeder.js";
 
 export type WhatsAppClientOptions = {

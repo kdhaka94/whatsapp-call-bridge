@@ -1,19 +1,33 @@
 {
-  "name": "calling-agent",
-  "version": "0.0.1",
-  "description": "Place WhatsApp voice calls (WhatsApp Web WASM) and bridge the live audio to an ElevenLabs Conversational AI agent.",
-  "private": true,
+  "name": "whatsapp-call-bridge",
+  "version": "0.1.0",
+  "description": "Place outbound WhatsApp voice calls from a personal account and bridge the live audio to any voice source — ElevenLabs agents, macOS TTS, STT providers, mic, files, or any real-time stream.",
   "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "vendor:install": "npm --prefix src/vendor/baileys-caller install",
     "vendor:build": "npm --prefix src/vendor/baileys-caller run build",
+    "build": "tsc -p tsconfig.json && node scripts/copy-vendor.mjs",
+    "build:all": "npm run vendor:build && npm run build",
+    "prepublishOnly": "npm run build:all",
     "phase0:call": "node scripts/phase0-call.mjs",
     "fetch-wasm": "node --experimental-websocket src/vendor/baileys-caller/scripts/fetch-wasm-resources.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "build": "tsc -p tsconfig.json",
-    "build:all": "npm run vendor:build && npm run build",
     "phase1:call": "node scripts/phase1-sine-push.mjs",
     "call-agent": "node scripts/call-agent.mjs",
     "mac-tts:call": "node scripts/mac-tts-call.mjs",
@@ -22,15 +36,35 @@
   "keywords": [
     "whatsapp",
     "voice-call",
+    "voip",
     "elevenlabs",
     "ai-agent",
-    "voip",
-    "baileys"
+    "tts",
+    "stt",
+    "speech-to-text",
+    "baileys",
+    "deepgram",
+    "assemblyai",
+    "whisper",
+    "macos-tts"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kdhaka94/whatsapp-call-bridge.git"
+  },
+  "homepage": "https://github.com/kdhaka94/whatsapp-call-bridge",
+  "bugs": {
+    "url": "https://github.com/kdhaka94/whatsapp-call-bridge/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
-    "baileys-caller": "file:src/vendor/baileys-caller",
+    "@roamhq/wrtc": "^0.10.0",
+    "@whiskeysockets/baileys": "^7.0.0-rc11",
     "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
     "ws": "^8.21.3"
   },
   "devDependencies": {
