@@ -1,0 +1,40 @@
+{
+  "name": "calling-agent",
+  "version": "0.0.1",
+  "description": "Place WhatsApp voice calls (WhatsApp Web WASM) and bridge the live audio to an ElevenLabs Conversational AI agent.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "vendor:install": "npm --prefix src/vendor/baileys-caller install",
+    "vendor:build": "npm --prefix src/vendor/baileys-caller run build",
+    "phase0:call": "node scripts/phase0-call.mjs",
+    "fetch-wasm": "node --experimental-websocket src/vendor/baileys-caller/scripts/fetch-wasm-resources.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.json",
+    "build:all": "npm run vendor:build && npm run build",
+    "phase1:call": "node scripts/phase1-sine-push.mjs",
+    "call-agent": "node scripts/call-agent.mjs"
+  },
+  "keywords": [
+    "whatsapp",
+    "voice-call",
+    "elevenlabs",
+    "ai-agent",
+    "voip",
+    "baileys"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "baileys-caller": "file:src/vendor/baileys-caller",
+    "qrcode": "^1.5.4",
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/ws": "^8.18.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  }
+}

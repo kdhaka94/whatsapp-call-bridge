@@ -1,0 +1,17 @@
+# Credentials — Baileys linked-device session keys. Anyone with this dir can
+# act as your linked WhatsApp device. NEVER commit.
+auth/
+
+# Vendored build artifacts + deps (installed/built locally)
+node_modules/
+src/vendor/baileys-caller/node_modules/
+src/vendor/baileys-caller/dist/
+
+# Root library build output (compiled from src/ — regenerate with npm run build)
+dist/
+
+# Generated media
+media/
+
+# OS / editor
+.DS_Store
