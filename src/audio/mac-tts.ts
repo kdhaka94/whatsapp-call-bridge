@@ -43,8 +43,10 @@ const FLOAT32_BYTES = 4;
 
 export class MacTtsSource {
   #ffmpegProc: ChildProcessWithoutNullStreams | null = null;
+  #meterTimer: NodeJS.Timeout | null = null;
   #tempFile: string | null = null;
   #stopped = false;
+  #finishFn: (() => void) | null = null;
 
   /**
    * Speak text and stream the audio as Float32Array chunks.
@@ -94,6 +96,11 @@ export class MacTtsSource {
       }
 
       // Step 2: stream-decode the WAV with ffmpeg → f32le PCM on stdout.
+      // Collect ALL audio first, then meter it out at real-time pace so the
+      // PushAudioFeeder's ring buffer doesn't overflow and drop samples.
+      // (say + ffmpeg generate audio much faster than realtime; without
+      // pacing, the entire utterance would be dumped into the feeder instantly
+      // and only the last ~2 seconds would survive the buffer overflow.)
       const ffmpegArgs = [
         "-hide_banner", "-loglevel", "error",
         "-i", this.#tempFile,
@@ -103,28 +110,22 @@ export class MacTtsSource {
 
       this.#ffmpegProc = spawn("ffmpeg", ffmpegArgs);
 
-      let pending = Buffer.alloc(0);
+      const allAudio: Buffer[] = [];
       let resolved = false;
+
       const finish = (err?: Error) => {
         if (resolved) return;
         resolved = true;
+        this.#finishFn = null;
+        if (this.#meterTimer) { clearInterval(this.#meterTimer); this.#meterTimer = null; }
         this.#cleanup();
         if (err) { callbacks.onError?.(err); reject(err); }
         else { callbacks.onEnd?.(); resolve(); }
       };
+      this.#finishFn = () => finish();
 
-      this.#ffmpegProc.stdout.on("data", (chunk: Buffer) => {
-        pending = Buffer.concat([pending, chunk]);
-        const emitBytes = Math.floor(pending.length / FLOAT32_BYTES) * FLOAT32_BYTES;
-        if (emitBytes === 0) return;
-        const frame = pending.subarray(0, emitBytes);
-        pending = pending.subarray(emitBytes);
-        const samples = new Float32Array(frame.length / FLOAT32_BYTES);
-        for (let i = 0; i < samples.length; i++) {
-          samples[i] = frame.readFloatLE(i * FLOAT32_BYTES);
-        }
-        if (!this.#stopped) callbacks.onChunk(samples);
-      });
+      // Collect all ffmpeg output into a single buffer.
+      this.#ffmpegProc.stdout.on("data", (chunk: Buffer) => { allAudio.push(chunk); });
 
       this.#ffmpegProc.stderr.on("data", (chunk: Buffer) => {
         const msg = chunk.toString().trim();
@@ -140,9 +141,43 @@ export class MacTtsSource {
       this.#ffmpegProc.on("exit", (code) => {
         if (code !== 0 && code !== null && !this.#stopped) {
           finish(new Error(`ffmpeg exited with code ${code}`));
-        } else {
-          finish();
+          return;
         }
+
+        // All audio collected — now meter it out at real-time pace.
+        const fullBuffer = Buffer.concat(allAudio);
+        const totalSamples = Math.floor(fullBuffer.length / FLOAT32_BYTES);
+        const samplesPerChunk = 320; // 20ms @ 16kHz — matches feeder consumption rate
+        const chunkIntervalMs = 20;
+        let offset = 0;
+
+        // Pre-push a small lead (~200ms) so the feeder has a head start.
+        const leadChunks = 10;
+        for (let i = 0; i < leadChunks && offset < totalSamples; i++) {
+          const end = Math.min(offset + samplesPerChunk, totalSamples);
+          const frame = fullBuffer.subarray(offset * FLOAT32_BYTES, end * FLOAT32_BYTES);
+          const samples = new Float32Array(end - offset);
+          for (let j = 0; j < samples.length; j++) {
+            samples[j] = frame.readFloatLE(j * FLOAT32_BYTES);
+          }
+          if (!this.#stopped) callbacks.onChunk(samples);
+          offset = end;
+        }
+
+        // Meter the rest at real-time cadence.
+        this.#meterTimer = setInterval(() => {
+          if (this.#stopped) { finish(); return; }
+          if (offset >= totalSamples) { finish(); return; }
+          const end = Math.min(offset + samplesPerChunk, totalSamples);
+          const frame = fullBuffer.subarray(offset * FLOAT32_BYTES, end * FLOAT32_BYTES);
+          const samples = new Float32Array(end - offset);
+          for (let j = 0; j < samples.length; j++) {
+            samples[j] = frame.readFloatLE(j * FLOAT32_BYTES);
+          }
+          if (!this.#stopped) callbacks.onChunk(samples);
+          offset = end;
+          if (offset >= totalSamples) finish();
+        }, chunkIntervalMs);
       });
     });
   };
@@ -150,9 +185,12 @@ export class MacTtsSource {
   /** Stop the current utterance immediately (kills ffmpeg, cleans up). */
   stop = (): void => {
     this.#stopped = true;
+    if (this.#meterTimer) { clearInterval(this.#meterTimer); this.#meterTimer = null; }
     try { this.#ffmpegProc?.kill("SIGTERM"); } catch {}
     this.#ffmpegProc = null;
     this.#cleanup();
+    // Resolve any pending speak() promise so callers don't hang.
+    this.#finishFn?.();
   };
 
   /** List available voices (runs `say -v '?'`). */

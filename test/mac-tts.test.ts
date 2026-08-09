@@ -60,12 +60,11 @@ describeOrSkip("MacTtsSource", { timeout: 30_000 }, () => {
     });
 
     // Give it a moment to start, then stop.
-    await new Promise((r) => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 500));
     tts.stop();
 
-    // The promise should resolve/reject without hanging.
-    await expect(promise).resolves.toBeUndefined();
-    // We may have received some chunks before stopping.
+    // The promise should resolve without hanging (stop() calls finish()).
+    await promise;
     expect(received).toBeGreaterThanOrEqual(0);
   });
 
