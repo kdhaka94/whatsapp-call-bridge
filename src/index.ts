@@ -37,4 +37,5 @@ export {
   clamp,
 } from "./audio/pcm.js";
 export { linearResampler, StreamingResampler, type Resampler } from "./audio/resampler.js";
+export { MacTtsSource, type MacTtsOptions, type SpeakCallbacks } from "./audio/mac-tts.js";
 export { configFromEnv, type AgentCallerConfig, type CallSessionOptions, type CallSessionEvents } from "./config.js";

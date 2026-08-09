@@ -15,7 +15,8 @@
     "build": "tsc -p tsconfig.json",
     "build:all": "npm run vendor:build && npm run build",
     "phase1:call": "node scripts/phase1-sine-push.mjs",
-    "call-agent": "node scripts/call-agent.mjs"
+    "call-agent": "node scripts/call-agent.mjs",
+    "mac-tts:call": "node scripts/mac-tts-call.mjs"
   },
   "keywords": [
     "whatsapp",
