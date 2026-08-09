@@ -16,7 +16,8 @@
     "build:all": "npm run vendor:build && npm run build",
     "phase1:call": "node scripts/phase1-sine-push.mjs",
     "call-agent": "node scripts/call-agent.mjs",
-    "mac-tts:call": "node scripts/mac-tts-call.mjs"
+    "mac-tts:call": "node scripts/mac-tts-call.mjs",
+    "stt:call": "node scripts/stt-call.mjs"
   },
   "keywords": [
     "whatsapp",

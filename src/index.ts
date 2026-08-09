@@ -38,4 +38,12 @@ export {
 } from "./audio/pcm.js";
 export { linearResampler, StreamingResampler, type Resampler } from "./audio/resampler.js";
 export { MacTtsSource, type MacTtsOptions, type SpeakCallbacks } from "./audio/mac-tts.js";
+
+// STT providers
+export { type SttProvider, type SttCallbacks } from "./stt/types.js";
+export { AssemblyAIStt, type AssemblyAISttOptions } from "./stt/assemblyai.js";
+export { DeepgramStt, type DeepgramSttOptions } from "./stt/deepgram.js";
+export { WhisperStt, type WhisperSttOptions } from "./stt/whisper.js";
+export { MacStt, type MacSttOptions } from "./stt/mac-stt.js";
+
 export { configFromEnv, type AgentCallerConfig, type CallSessionOptions, type CallSessionEvents } from "./config.js";
